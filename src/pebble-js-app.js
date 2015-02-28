@@ -1,10 +1,12 @@
+var id;
 var locationOptions = {
   enableHighAccuracy: true, 
-  maximumAge: 10000, 
-  timeout: 10000
+  maximumAge: 0, 
+  timeout: 5000
 };
 
 function locationSuccess(pos) {
+	console.log('Location changed u hack');
   console.log('lat= ' + pos.coords.latitude + ' lon= ' + pos.coords.longitude);
 	Pebble.sendAppMessage({'lat': pos.coords.latitude.toString(),'lon': pos.coords.longitude.toString()}, function(err)
 	{
@@ -23,6 +25,6 @@ function locationError(err) {
 Pebble.addEventListener('ready',
   function(e) {
     // Request current position
-    navigator.geolocation.getCurrentPosition(locationSuccess, locationError, locationOptions);
+    id = navigator.geolocation.watchPosition(locationSuccess, locationError, locationOptions);
   }
 );
