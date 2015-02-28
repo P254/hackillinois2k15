@@ -1,7 +1,10 @@
 {
-    "appKeys": {},
+    "appKeys": {
+        "lat": 0,
+        "lon": 1
+    },
     "capabilities": [
-        ""
+        "location"
     ],
     "companyName": "pranav.bachu@gmail.com",
     "longName": "lol",
