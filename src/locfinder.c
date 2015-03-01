@@ -23,7 +23,9 @@ static const GPathInfo ARROW_POINTS = {
 static Window *window_main;
 static Layer *layer_arrow;
 static TextLayer *layer_alert_text;
+//static BitmapLayer *layer_bitmap;
 
+//static GBitmap *bitmap;
 static GPath *arrow;
 
 static double offset_angle;
@@ -32,11 +34,22 @@ static double offset_angle;
 #define STATE_TRANS 1
 #define STATE_NAV 2
 #define STATE_TITLE 3
+#define STATE_CLEAR 4
+#define STATE_SAVE 5
 static int state = STATE_TITLE;
   
-static int timer = 0;
-static int maxtimer = 2;
+#define MAXTIMER 2
+static int timer = MAXTIMER;
   
+static void message_js(int index, char *message)
+{
+  DictionaryIterator *dictiter = NULL;
+  app_message_outbox_begin(&dictiter);
+  dict_write_cstring(dictiter, index, message);
+  dict_write_end(dictiter);
+  app_message_outbox_send();
+}
+
 static void sync_error(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) 
 {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
@@ -70,14 +83,24 @@ static void sync_success(const uint32_t key, const Tuple* new_tuple, const Tuple
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   if(state == STATE_MENU)
   {
-    text_layer_set_text(layer_alert_text, "lolz");
+    state = STATE_CLEAR;
+    text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_28));
+    text_layer_set_text(layer_alert_text, "\nClearing destination...");
+    message_js(0, "CLEAR");
+    text_layer_set_text(layer_alert_text, "\nDestination cleared.");
+    timer = MAXTIMER;
   }
 }
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   if(state == STATE_MENU)
   {
-    text_layer_set_text(layer_alert_text, "lolzard"); 
+    state = STATE_SAVE;
+    text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+    text_layer_set_text(layer_alert_text, "\n\nSaving current location..."); 
+    message_js(0, "SAVE");
+    text_layer_set_text(layer_alert_text, "\nYour current location has been set as the destination.");
+    timer = MAXTIMER+1;
   }
 }
 
@@ -87,22 +110,22 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
     state = STATE_TRANS;
     text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text(layer_alert_text, "\nPlease begin walking to calibrate the compass."); 
+    message_js(0, "STARTNAV");
   }
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) 
 {
-  if(state == STATE_TITLE)
+  if(state == STATE_TITLE || state == STATE_CLEAR || state == STATE_SAVE)
   {
-    if(timer < maxtimer) timer++;
-    if(timer == maxtimer)
+    if(timer > 0) timer--;
+    if(timer == 0)
     {
       text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
       text_layer_set_text(layer_alert_text, "Clear Saved Location\n\n\nSave Current Location\n\nNavigate to Saved Location");
       state = STATE_MENU;
     }  
   }
-  
 }
 
 static void click_config_provider(void *context) {
@@ -126,6 +149,12 @@ static void window_main_load(Window *window) {
   Layer *layer_window = window_get_root_layer(window);
   GRect bounds = layer_get_frame(layer_window);
 
+  //layer_bitmap = bitmap_layer_create(bounds);
+  //bitmap = gbitmap_create_with_resource(RESOURCE_ID_app_icon);
+  //bitmap_layer_set_bitmap(layer_bitmap, bitmap);
+  //bitmap_layer_set_compositing_mode(layer_bitmap, GCompOpAnd);
+  //layer_add_child(layer_window, bitmap_layer_get_layer(layer_bitmap));
+  
   layer_arrow = layer_create(bounds);
   
   layer_set_update_proc(layer_arrow, layer_arrow_update_callback);
@@ -142,8 +171,8 @@ static void window_main_load(Window *window) {
   text_layer_set_text_color(layer_alert_text, GColorWhite);
   text_layer_set_text_alignment(layer_alert_text, GTextAlignmentCenter);
   layer_set_frame(text_layer_get_layer(layer_alert_text), alert_bounds);
-  text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-  text_layer_set_text(layer_alert_text, "\n\nNice Little Tracker Experience");
+  text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_text(layer_alert_text, "\nOnTrack");
   
   layer_add_child(layer_window, text_layer_get_layer(layer_alert_text));
 
@@ -159,6 +188,8 @@ static void window_main_unload(Window *window) {
   text_layer_destroy(layer_alert_text);
   gpath_destroy(arrow);
   layer_destroy(layer_arrow);
+  //gbitmap_destroy(bitmap);
+  //bitmap_layer_destroy(layer_bitmap);
 }
 
 static void init() {

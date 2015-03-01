@@ -1,25 +1,25 @@
 {
     "appKeys": {
-        "angle": 1
+        "angle": 0
     },
     "capabilities": [
-        ""
+        "location"
     ],
     "companyName": "mattmcd25@gmail.com",
-    "longName": "Location Finder",
+    "longName": "OnTrack",
     "projectType": "native",
     "resources": {
         "media": [
             {
                 "file": "images/app_icon.png",
                 "menuIcon": true,
-                "name": "APP_ICON",
+                "name": "app_icon",
                 "type": "png"
             }
         ]
     },
     "sdkVersion": "2",
-    "shortName": "Location Finder",
+    "shortName": "OnTrack",
     "uuid": "78d1ecdd-7b42-4fed-af72-fe12b1490092",
     "versionCode": 1,
     "versionLabel": "1.0",
