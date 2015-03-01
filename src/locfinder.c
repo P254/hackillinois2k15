@@ -12,7 +12,8 @@
 static AppSync sync;
 static uint8_t sync_buffer[BUFF];
 enum MsgKeys {
-  angle = 0x0
+  angle = 0x0,
+  distance = 0x1
 };
   
 static const GPathInfo ARROW_POINTS = {
@@ -29,6 +30,7 @@ static TextLayer *layer_alert_text;
 static GPath *arrow;
 
 static double offset_angle;
+static double distance_d;
 
 #define STATE_MENU 0
 #define STATE_TRANS 1
@@ -56,6 +58,7 @@ static void sync_error(DictionaryResult dict_error, AppMessageResult app_message
 }
 static void sync_success(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) 
 {
+  
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Sync Success %s", new_tuple->value->cstring);
   if(state == STATE_TRANS)
   {
@@ -64,19 +67,26 @@ static void sync_success(const uint32_t key, const Tuple* new_tuple, const Tuple
     text_layer_set_background_color(layer_alert_text, GColorClear);
     text_layer_set_text_color(layer_alert_text, GColorBlack);
     text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    text_layer_set_text_alignment(layer_alert_text, GTextAlignmentLeft);
+    text_layer_set_text_alignment(layer_alert_text, GTextAlignmentCenter);
     layer_set_frame(text_layer_get_layer(layer_alert_text), alert_bounds);
     state = STATE_NAV;
   }
   
   if(state == STATE_NAV)
   {
-    offset_angle = new_tuple->value->int32;
-  
-    gpath_rotate_to(arrow, TRIG_MAX_ANGLE/360 * offset_angle);
-    layer_mark_dirty(layer_arrow);
-  
-    //text_layer_set_text(layer_alert_text, to_string(new_tuple->value->int32)); 
+    if(key == angle)
+    {    
+      offset_angle = new_tuple->value->int32;
+      gpath_rotate_to(arrow, TRIG_MAX_ANGLE/360 * offset_angle);
+      layer_mark_dirty(layer_arrow);
+      vibes_short_pulse();
+      text_layer_set_text(layer_alert_text, "Navigating\n\n\n\n\n\n\n\nlol"); 
+    }
+    else if(key == distance)
+    {
+      distance_d = new_tuple->value->int32;
+      text_layer_set_text(layer_alert_text, "Navigating\n\n\n\n\n\n\n\nlol"); 
+    }
   }
 }
 
@@ -202,6 +212,7 @@ static void init() {
   window_set_click_config_provider(window_main, click_config_provider);
   tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
   window_stack_push(window_main, true);
+  message_js(0, "STARTUP");
 }
 
 static void deinit() {

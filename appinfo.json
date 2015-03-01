@@ -1,6 +1,7 @@
 {
     "appKeys": {
-        "angle": 0
+        "angle": 0,
+        "distance": 1
     },
     "capabilities": [
         "location"

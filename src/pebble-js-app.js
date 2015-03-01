@@ -13,6 +13,7 @@ var lon_prv = 0.0;
 var lon_cur = 0.0;
 var lon_des = 0.0;
 var offset_angle = 0.0;
+var distance = 0.0;
 
 var saveCurrentLocation = false;
 var navigating = false;
@@ -48,8 +49,8 @@ function locationSuccess(pos) {
     lat_cur = y2demo;
     lat_des = y3demo;
     lon_prv = x1demo;
-    lat_prv = x2demo;
-    lat_des = x3demo;
+    lon_cur = x2demo;
+    lon_des = x3demo;
   }  
   
   //if save loc
@@ -71,7 +72,7 @@ function locationSuccess(pos) {
       var dX = lon_des-lon_cur;
       var dY = lat_des-lat_cur;
       var angle_comp = (Math.PI/2 - Math.abs(angle_direction));
-      var distance = Math.sqrt(dX*dX + dY*dY);
+      distance = Math.sqrt(dX*dX + dY*dY);
       var R = dY * Math.tan(angle_direction);
       var r = R - dX;
       offset_angle = Math.asin((r/distance)*Math.sin(angle_comp));
@@ -82,7 +83,8 @@ function locationSuccess(pos) {
     console.log('theta=' + offset_angle);
     
     Pebble.sendAppMessage({
-      'angle': offset_angle
+      'angle': offset_angle,
+      'distance': distance
     }, function(err) {
       console.log("Success");
     }, function(err) {
@@ -93,7 +95,14 @@ function locationSuccess(pos) {
 
 function saveDestinationToFile()
 {
-  
+  localStorage.setItem(0, lat_des);
+  localStorage.setItem(1, lon_des);
+}
+
+function loadDestinationFromFile()
+{
+  lat_des = localStorage.getItem(0);
+  lon_des = localStorage.getItem(1);
 }
 
 function clearDestination()
@@ -129,5 +138,6 @@ Pebble.addEventListener('appmessage',
     if(value == "CLEAR") clearDestination();
     else if(value == "SAVE") saveCurrentLocation = true;
     else if(value == "STARTNAV") navigating = true;
+    else if(value == "STARTUP") loadDestinationFromFile();
   }
 );
