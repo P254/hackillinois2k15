@@ -7,7 +7,6 @@ var lon_prv = -88.22826711564456;
 var lon_cur = -88.2284647014247;
 var lon_des = -88.22847872192051;//100
 var offset_angle = 0.0;
-var angle_string = "0.0";
 
 var locationOptions = {
   enableHighAccuracy: true, 
@@ -36,14 +35,12 @@ function locationSuccess(pos) {
     offset_angle = Math.asin((r/distance)*Math.sin(angle_comp));
     console.log(offset_angle);
     offset_angle = (offset_angle*180)/Math.PI;
-    angle_string = offset_angle.toString();
   }
 
   console.log('theta=' + offset_angle);
   
   Pebble.sendAppMessage({
-    'angle': offset_angle,
-    'anglestring': angle_string
+    'angle': offset_angle
   }, function(err) {
 		console.log("Success");
 	}, function(err) {

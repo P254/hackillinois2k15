@@ -1,8 +1,6 @@
 {
     "appKeys": {
-        "angle": 0,
-        "anglestring": 1,
-        "distance": 2
+        "angle": 1
     },
     "capabilities": [
         ""
@@ -11,7 +9,14 @@
     "longName": "Location Finder",
     "projectType": "native",
     "resources": {
-        "media": []
+        "media": [
+            {
+                "file": "images/app_icon.png",
+                "menuIcon": true,
+                "name": "APP_ICON",
+                "type": "png"
+            }
+        ]
     },
     "sdkVersion": "2",
     "shortName": "Location Finder",

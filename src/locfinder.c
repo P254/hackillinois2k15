@@ -6,15 +6,13 @@
  *    <http://opengameart.org/content/north-and-southalpha-chanel>
  */
 
-#include "pebble.h"
+#include "pebble.h" 
   
 #define BUFF 128
 static AppSync sync;
 static uint8_t sync_buffer[BUFF];
 enum MsgKeys {
-  angle = 0x0,
-  anglestring = 0x1,
-  distance = 0x2
+  angle = 0x0
 };
   
 static const GPathInfo ARROW_POINTS = {
@@ -30,8 +28,15 @@ static GPath *arrow;
 
 static double offset_angle;
 
-static bool first = true;
-
+static int state = 0;
+#define STATE_MENU 0
+#define STATE_TRANS 1
+#define STATE_NAV 2
+#define STATE_TITLE 3
+  
+static int timer = 0;
+static int maxtimer = 2000;
+  
 static void sync_error(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) 
 {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
@@ -39,7 +44,7 @@ static void sync_error(DictionaryResult dict_error, AppMessageResult app_message
 static void sync_success(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) 
 {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Sync Success %s", new_tuple->value->cstring);
-  if(first)
+  if(state == STATE_TRANS)
   {
     GRect bounds = layer_get_frame(window_get_root_layer(window_main));
     GRect alert_bounds = GRect(0, -3, bounds.size.w, bounds.size.h / 7);
@@ -48,72 +53,60 @@ static void sync_success(const uint32_t key, const Tuple* new_tuple, const Tuple
     text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(layer_alert_text, GTextAlignmentLeft);
     layer_set_frame(text_layer_get_layer(layer_alert_text), alert_bounds);
-    first = false;
+    state = STATE_NAV;
   }
   
-  offset_angle = new_tuple->value->int32;
+  if(state == STATE_NAV)
+  {
+    offset_angle = new_tuple->value->int32;
   
-  gpath_rotate_to(arrow, TRIG_MAX_ANGLE/360 * offset_angle);
-  layer_mark_dirty(layer_arrow);
+    gpath_rotate_to(arrow, TRIG_MAX_ANGLE/360 * offset_angle);
+    layer_mark_dirty(layer_arrow);
   
-  //text_layer_set_text(layer_alert_text, to_string(new_tuple->value->int32));
+    //text_layer_set_text(layer_alert_text, to_string(new_tuple->value->int32)); 
+  }
 }
 
-//gpath_rotate_to(arrow, /*angle*/);
-/*
-FIRST:
-    alert_bounds = GRect(0, 0, bounds.size.w, bounds.size.h);
-    text_layer_set_background_color(s_text_layer_calib_state, GColorBlack);
-    text_layer_set_text_color(s_text_layer_calib_state, GColorWhite);
-    text_layer_set_font(s_text_layer_calib_state, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-    text_layer_set_text_alignment(s_text_layer_calib_state, GTextAlignmentCenter);
-SECOND:
-    alert_bounds = GRect(0, -3, bounds.size.w, bounds.size.h / 7);
-    text_layer_set_background_color(s_text_layer_calib_state, GColorClear);
-    text_layer_set_text_color(s_text_layer_calib_state, GColorBlack);
-    text_layer_set_font(s_text_layer_calib_state, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    text_layer_set_text_alignment(s_text_layer_calib_state, GTextAlignmentLeft);
-    
-BOTH:
-    GRect bounds = layer_get_frame(window_get_root_layer(s_main_window)); 
-    GRect alert_bounds; 
-    layer_set_frame(text_layer_get_layer(s_text_layer_calib_state), alert_bounds);
-    text_layer_set_text(s_text_layer_calib_state, s_valid_buf);
-    layer_mark_dirty(s_path_layer);
-*/
-
-/*static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-  lat_prv = lat_cur;
-  lon_prv = lon_cur;
-  //pull new values for lat and lon
-  lat_cur = 50;
-  lon_cur = -50;
-  if(lat_cur != lat_prv || lon_cur != lon_prv)
+static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if(state == STATE_MENU)
   {
-    //call javascript shit? idek how this works
-    
-    double angle_direction = atan((lon_cur-lon_prv)/(lat_cur-lat_prv));
-    double dX = lon_des-lon_cur;
-    double dY = lat_des-lat_cur;
-    double angle_comp = (90 - angle_direction);
-    double distance = sqrt(dX*dX + dY*dY);
-    double R = dY * tan(angle_direction);
-    double r = R - dX;
-    offset_angle = asin((r/distance)*sin(angle_comp));*/
-    
-    /*gpath_rotate_to(arrow, offset_angle);
-    layer_mark_dirty(layer_arrow);
-    
-    GRect bounds = layer_get_frame(window_get_root_layer(window_main));
-    GRect alert_bounds = GRect(0, -3, bounds.size.w, bounds.size.h / 7);
-    text_layer_set_background_color(layer_alert_text, GColorClear);
-    text_layer_set_text_color(layer_alert_text, GColorBlack);
-    text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    text_layer_set_text_alignment(layer_alert_text, GTextAlignmentLeft);
-    layer_set_frame(text_layer_get_layer(layer_alert_text), alert_bounds);
-    text_layer_set_text(layer_alert_text, "lol");
+    text_layer_set_text(layer_alert_text, "lolz");
   }
-} */
+}
+
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if(state == STATE_MENU)
+  {
+    text_layer_set_text(layer_alert_text, "lolzard"); 
+  }
+}
+
+static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if(state == STATE_MENU)
+  {
+    state = STATE_TRANS;
+    text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+    text_layer_set_text(layer_alert_text, "\nPlease begin walking to calibrate the compass."); 
+  }
+}
+
+static void tick_handler(struct tm *tick_time, TimeUnits units_changed) 
+{
+  if(timer < maxtimer) timer++;
+  if(timer == maxtimer)
+  {
+    text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+    text_layer_set_text(layer_alert_text, "Clear Saved Location\n\n\nSave Current Location\n\nNavigate to Saved Location");
+    state = STATE_MENU;
+  }
+}
+
+static void click_config_provider(void *context) {
+  // Register the ClickHandlers
+  window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
+  window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+}
 
 static void layer_arrow_update_callback(Layer *path, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -139,15 +132,14 @@ static void window_main_load(Window *window) {
   GPoint center = GPoint(bounds.size.w / 2, bounds.size.h / 2);
   gpath_move_to(arrow, center);
 
-
   layer_alert_text = text_layer_create(GRect(0, 0, bounds.size.w, bounds.size.h / 7));
   GRect alert_bounds = GRect(0, 0, bounds.size.w, bounds.size.h);
   text_layer_set_background_color(layer_alert_text, GColorBlack);
   text_layer_set_text_color(layer_alert_text, GColorWhite);
-  text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(layer_alert_text, GTextAlignmentCenter);
   layer_set_frame(text_layer_get_layer(layer_alert_text), alert_bounds);
-  text_layer_set_text(layer_alert_text, "\nPlease begin walking to calibrate the compass.");
+  text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+  text_layer_set_text(layer_alert_text, "\n\nNice Little Tracker Experience");
   
   layer_add_child(layer_window, text_layer_get_layer(layer_alert_text));
 
@@ -166,23 +158,24 @@ static void window_main_unload(Window *window) {
 }
 
 static void init() {
-  //tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   window_main = window_create();
   window_set_window_handlers(window_main, (WindowHandlers) {
     .load = window_main_load,
     .unload = window_main_unload,
   });
+  window_set_click_config_provider(window_main, click_config_provider);
+  tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
   window_stack_push(window_main, true);
 }
 
 static void deinit() {
-  //tick_timer_service_unsubscribe();
   window_destroy(window_main);
+  tick_timer_service_unsubscribe();
 }
 
 int main() {
   init();
   app_event_loop();
   deinit();
-}
+} 
