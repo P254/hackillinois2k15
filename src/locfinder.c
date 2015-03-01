@@ -31,6 +31,9 @@ static GPath *arrow;
 
 static double offset_angle;
 static double distance_d;
+static char *returnString;
+
+static char lolz[32];
 
 #define STATE_MENU 0
 #define STATE_TRANS 1
@@ -63,7 +66,7 @@ static void sync_success(const uint32_t key, const Tuple* new_tuple, const Tuple
   if(state == STATE_TRANS)
   {
     GRect bounds = layer_get_frame(window_get_root_layer(window_main));
-    GRect alert_bounds = GRect(0, -3, bounds.size.w, bounds.size.h / 7);
+    GRect alert_bounds = GRect(0, -3, bounds.size.w, bounds.size.h);
     text_layer_set_background_color(layer_alert_text, GColorClear);
     text_layer_set_text_color(layer_alert_text, GColorBlack);
     text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_18));
@@ -72,20 +75,25 @@ static void sync_success(const uint32_t key, const Tuple* new_tuple, const Tuple
     state = STATE_NAV;
   }
   
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "key %lu", key);
+  
   if(state == STATE_NAV)
   {
     if(key == angle)
     {    
+      //returnString = new_tuple->value->cstring;
+      
       offset_angle = new_tuple->value->int32;
       gpath_rotate_to(arrow, TRIG_MAX_ANGLE/360 * offset_angle);
       layer_mark_dirty(layer_arrow);
       vibes_short_pulse();
-      text_layer_set_text(layer_alert_text, "Navigating\n\n\n\n\n\n\n\nlol"); 
+      //nprintf(lolz, sizeof(lolz), "Navigating\n\n\n\n\n\n\nDistance: %dm", (int)distance_d);
+      text_layer_set_text(layer_alert_text, "Navigating"); 
     }
     else if(key == distance)
     {
       distance_d = new_tuple->value->int32;
-      text_layer_set_text(layer_alert_text, "Navigating\n\n\n\n\n\n\n\nlol"); 
+      text_layer_set_text(layer_alert_text, "Navigating\n\n\n\nlol"); 
     }
   }
 }

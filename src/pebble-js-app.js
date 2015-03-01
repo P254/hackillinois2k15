@@ -14,6 +14,7 @@ var lon_cur = 0.0;
 var lon_des = 0.0;
 var offset_angle = 0.0;
 var distance = 0.0;
+var returnString = "";
 
 var saveCurrentLocation = false;
 var navigating = false;
@@ -81,10 +82,11 @@ function locationSuccess(pos) {
     }
   
     console.log('theta=' + offset_angle);
+    console.log('distance=' + distance);
+    returnString = offset_angle+"&"+distance;
     
     Pebble.sendAppMessage({
-      'angle': offset_angle,
-      'distance': distance
+      'angle': offset_angle
     }, function(err) {
       console.log("Success");
     }, function(err) {
