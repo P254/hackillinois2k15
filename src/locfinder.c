@@ -145,12 +145,12 @@ static void window_main_unload(Window *window) {
 
 static void init() {
   //tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+  app_message_open(64, 64);
   window_main = window_create();
   window_set_window_handlers(window_main, (WindowHandlers) {
     .load = window_main_load,
     .unload = window_main_unload,
   });
-  app_message_open(64, 64);
   window_stack_push(window_main, true);
 }
 
