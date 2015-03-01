@@ -12,7 +12,7 @@ var angle_string = "0.0";
 var locationOptions = {
   enableHighAccuracy: true, 
   maximumAge: 0, 
-  timeout: 1000
+  timeout: 5000
 };
 
 function locationSuccess(pos) {

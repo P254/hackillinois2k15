@@ -156,6 +156,7 @@ static void window_main_load(Window *window) {
   };
   
   app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_value, ARRAY_LENGTH(initial_value), sync_success, sync_error, NULL);
+  app_comm_set_sniff_interval(SNIFF_INTERVAL_REDUCED);
 }
 
 static void window_main_unload(Window *window) {
