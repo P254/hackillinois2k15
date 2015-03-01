@@ -1,20 +1,17 @@
 {
-    "appKeys": {
-        "lat": 0,
-        "lon": 1
-    },
+    "appKeys": {},
     "capabilities": [
-        "location"
+        ""
     ],
-    "companyName": "pranav.bachu@gmail.com",
-    "longName": "lol",
+    "companyName": "mattmcd25@gmail.com",
+    "longName": "Location Finder",
     "projectType": "native",
     "resources": {
         "media": []
     },
     "sdkVersion": "2",
-    "shortName": "lol",
-    "uuid": "1341e6ec-d5a5-48d8-a1a8-3556a7a854ca",
+    "shortName": "Location Finder",
+    "uuid": "78d1ecdd-7b42-4fed-af72-fe12b1490092",
     "versionCode": 1,
     "versionLabel": "1.0",
     "watchapp": {
