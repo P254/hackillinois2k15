@@ -28,14 +28,14 @@ static GPath *arrow;
 
 static double offset_angle;
 
-static int state = 0;
 #define STATE_MENU 0
 #define STATE_TRANS 1
 #define STATE_NAV 2
 #define STATE_TITLE 3
+static int state = STATE_TITLE;
   
 static int timer = 0;
-static int maxtimer = 2000;
+static int maxtimer = 2;
   
 static void sync_error(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) 
 {
@@ -92,13 +92,17 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) 
 {
-  if(timer < maxtimer) timer++;
-  if(timer == maxtimer)
+  if(state == STATE_TITLE)
   {
-    text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
-    text_layer_set_text(layer_alert_text, "Clear Saved Location\n\n\nSave Current Location\n\nNavigate to Saved Location");
-    state = STATE_MENU;
+    if(timer < maxtimer) timer++;
+    if(timer == maxtimer)
+    {
+      text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+      text_layer_set_text(layer_alert_text, "Clear Saved Location\n\n\nSave Current Location\n\nNavigate to Saved Location");
+      state = STATE_MENU;
+    }  
   }
+  
 }
 
 static void click_config_provider(void *context) {
