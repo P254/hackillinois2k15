@@ -8,11 +8,13 @@
 
 #include "pebble.h"
   
-#define BUFF 64
+#define BUFF 128
 static AppSync sync;
 static uint8_t sync_buffer[BUFF];
 enum MsgKeys {
-  angle = 0x0
+  angle = 0x0,
+  anglestring = 0x1,
+  distance = 0x2
 };
   
 static const GPathInfo ARROW_POINTS = {
@@ -28,6 +30,8 @@ static GPath *arrow;
 
 static double offset_angle;
 
+static bool first = true;
+
 static void sync_error(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) 
 {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
@@ -35,7 +39,24 @@ static void sync_error(DictionaryResult dict_error, AppMessageResult app_message
 static void sync_success(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) 
 {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Sync Success %s", new_tuple->value->cstring);
-  text_layer_set_text(layer_alert_text, new_tuple->value->cstring);
+  if(first)
+  {
+    GRect bounds = layer_get_frame(window_get_root_layer(window_main));
+    GRect alert_bounds = GRect(0, -3, bounds.size.w, bounds.size.h / 7);
+    text_layer_set_background_color(layer_alert_text, GColorClear);
+    text_layer_set_text_color(layer_alert_text, GColorBlack);
+    text_layer_set_font(layer_alert_text, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_text_alignment(layer_alert_text, GTextAlignmentLeft);
+    layer_set_frame(text_layer_get_layer(layer_alert_text), alert_bounds);
+    first = false;
+  }
+  
+  offset_angle = new_tuple->value->int32;
+  
+  gpath_rotate_to(arrow, TRIG_MAX_ANGLE/360 * offset_angle);
+  layer_mark_dirty(layer_arrow);
+  
+  //text_layer_set_text(layer_alert_text, to_string(new_tuple->value->int32));
 }
 
 //gpath_rotate_to(arrow, /*angle*/);
@@ -131,7 +152,7 @@ static void window_main_load(Window *window) {
   layer_add_child(layer_window, text_layer_get_layer(layer_alert_text));
 
   Tuplet initial_value[] = {
-    TupletCString(angle, "0.000")
+    TupletInteger(angle, 0)
   };
   
   app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_value, ARRAY_LENGTH(initial_value), sync_success, sync_error, NULL);
@@ -145,7 +166,7 @@ static void window_main_unload(Window *window) {
 
 static void init() {
   //tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
-  app_message_open(64, 64);
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   window_main = window_create();
   window_set_window_handlers(window_main, (WindowHandlers) {
     .load = window_main_load,

@@ -1,5 +1,9 @@
 {
-    "appKeys": {},
+    "appKeys": {
+        "angle": 0,
+        "anglestring": 1,
+        "distance": 2
+    },
     "capabilities": [
         ""
     ],
