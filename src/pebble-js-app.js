@@ -14,6 +14,7 @@ var lon_cur = 0.0;
 var lon_des = 0.0;
 var offset_angle = 0.0;
 var distance = 0.0;
+var prevDistance = 0.0;
 var returnString = "";
 
 var saveCurrentLocation = false;
@@ -69,6 +70,7 @@ function locationSuccess(pos) {
   {
     if(lat_cur != lat_prv || lon_cur != lon_prv)
     {
+      prevDistance = distance;
       var angle_direction = Math.atan((lon_cur-lon_prv)/(lat_cur-lat_prv));
       var dX = lon_des-lon_cur;
       var dY = lat_des-lat_cur;
@@ -79,6 +81,7 @@ function locationSuccess(pos) {
       offset_angle = Math.asin((r/distance)*Math.sin(angle_comp));
       console.log(offset_angle);
       offset_angle = (offset_angle*180)/Math.PI;
+      if(distance > prevDistance && distance-prevDistance < -0.05*distance) offset_angle += 180;
     }
   
     console.log('theta=' + offset_angle);
